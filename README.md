@@ -1,32 +1,33 @@
-Working in a command line environment is recommended for ease of use with git and dvc. If on Windows, WSL1 or 2 is recommended.
+# Deploying a Scalable ML Pipeline with FastAPI
 
-## Project Repository
-https://github.com/stormy-martin/Deploying-a-Scalable-ML-Pipeline-with-FastAPI
+Trains an income classifier on U.S. Census data, measures how its performance varies across demographic slices, and serves predictions through a FastAPI REST API, with unit tests and CI on GitHub Actions. Built from the Udacity starter code as a WGU course project.
 
-# Environment Set up (pip or conda)
-* Option 1: use the supplied file `environment.yml` to create a new environment with conda
-* Option 2: use the supplied file `requirements.txt` to create a new environment with pip
-    
-## Repositories
-* Create a directory for the project and initialize git.
-    * As you work on the code, continually commit changes. Trained models you want to use in production must be committed to GitHub.
-* Connect your local git repo to GitHub.
-* Setup GitHub Actions on your repo. You can use one of the pre-made GitHub Actions if at a minimum it runs pytest and flake8 on push and requires both to pass without error.
-    * Make sure you set up the GitHub Action to have the same version of Python as you used in development.
+## What it does
+- **Model:** scikit-learn Random Forest (100 trees) predicting whether income exceeds $50K; categorical features are one-hot encoded
+- **Evaluation:** 80/20 split (26,048 training rows, 6,513 test rows). Test precision **0.733**, recall **0.640**, F1 **0.683**. Precision, recall, and F1 are used instead of accuracy because the classes are imbalanced (76% / 24%)
+- **Slice analysis:** performance on every value of each categorical feature (`slice_output.txt`). F1 ranges from 0.69 for some groups to 0.53 for others; see the model card
+- **API:** `GET /` returns a welcome message; `POST /data/` returns a prediction
+- **Tests and CI:** pytest unit tests for training, inference, metrics, and the data split, run with flake8 on every push through GitHub Actions
 
-# Data
-* Download census.csv and commit it to dvc.
-* This data is messy, try to open it in pandas and see what you get.
-* To clean it, use your favorite text editor to remove all spaces.
+## Files
+| File | Purpose |
+|---|---|
+| `train_model.py` | Loads data, trains and saves the model, writes slice metrics |
+| `ml/` | Data processing and model functions |
+| `main.py` | FastAPI app |
+| `local_api.py` | Sends sample GET and POST requests to the running API |
+| `test_ml.py` | Unit tests |
+| `model_card.md` | Model details, metrics, ethical considerations |
+| `screenshots/` | CI run, unit tests, local API output |
 
-# Model
-* Using the starter code, write a machine learning model that trains on the clean data and saves the model. Complete any function that has been started.
-* Write unit tests for at least 3 functions in the model code.
-* Write a function that outputs the performance of the model on slices of the data.
-    * Suggestion: for simplicity, the function can just output the performance on slices of just the categorical features.
-* Write a model card using the provided template.
+## Run it
+```bash
+pip install -r requirements.txt
+python train_model.py
+uvicorn main:app --reload
+python local_api.py
+pytest test_ml.py
+```
 
-# API Creation
-*  Create a RESTful API using FastAPI this must implement:
-    * GET on the root giving a welcome message.
-    * POST that does model inference.
+## Tools
+Python · pandas · scikit-learn · FastAPI · pytest · flake8 · GitHub Actions
